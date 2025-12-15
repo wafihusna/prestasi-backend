@@ -10,3 +10,15 @@ type UserService interface {
 	DeleteUser(id string) error
 	AssignRole(userID, roleID string) error
 }
+
+type StudentService interface {
+	GetStudents() ([]model.Student, error)
+	GetStudentByID(id string) (*model.Student, error)
+	GetStudentAchievements(studentID string) ([]any, error) // Mongo handled di impl
+	AssignAdvisor(studentID, advisorID string) error
+}
+
+type LecturerService interface {
+	GetLecturers() ([]model.Lecturer, error)
+	GetLecturerAdvisees(lecturerID string) ([]model.Student, error)
+}

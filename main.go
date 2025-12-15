@@ -35,6 +35,7 @@ func main() {
 	userRepo := repository.NewUserRepository(pg)
 	roleRepo := repository.NewRoleRepository(pg)
 	studentRepo := repository.NewStudentRepository(pg)
+	lecturerService := service.NewLecturerService(lecturerRepo, studentRepo)
 
 	achievementRepo := repository.NewAchievementRepository(
 		mongoClient,
@@ -70,6 +71,7 @@ func main() {
 	route.AuthRoute(api, authService)
 	route.AchievementRoute(api, achievementService)
 	route.UserRoute(api, userService)
+	route.StudentLecturerRoute(api, studentService, lecturerService)
 
 	log.Println("🚀 Server running on port", cfg.AppPort)
 	log.Fatal(app.Listen(":" + cfg.AppPort))

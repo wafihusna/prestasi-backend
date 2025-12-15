@@ -31,10 +31,16 @@ type RoleRepository interface {
 }
 
 type StudentRepository interface {
+	FindAll() ([]model.Student, error)
+	FindByID(id string) (*model.Student, error)
 	GetByUserID(userID string) (*model.Student, error)
+	UpdateAdvisor(studentID, advisorID string) error
+	FindByAdvisorID(advisorID string) ([]model.Student, error)
 }
 
 type LecturerRepository interface {
+	FindAll() ([]model.Lecturer, error)
+	FindByID(id string) (*model.Lecturer, error)
 	GetByUserID(userID string) (*model.Lecturer, error)
 }
 
@@ -54,10 +60,6 @@ type UserService interface {
 	DeleteUser(id string) error
 	AssignRole(userID, roleID string) error
 }
-
-// ===============
-// Mongo Repository
-// ===============
 
 type AchievementRepository interface {
 	CreateAchievement(ctx context.Context, achievement *model.Achievement) error
