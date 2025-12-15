@@ -14,7 +14,8 @@ type UserService interface {
 type StudentService interface {
 	GetStudents() ([]model.Student, error)
 	GetStudentByID(id string) (*model.Student, error)
-	GetStudentAchievements(studentID string) ([]any, error) // Mongo handled di impl
+	GetStudentByUserID(userID string) (*model.Student, error)
+	GetStudentAchievements(studentUUID string) ([]model.Achievement, error)
 	AssignAdvisor(studentID, advisorID string) error
 }
 

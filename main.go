@@ -35,7 +35,7 @@ func main() {
 	userRepo := repository.NewUserRepository(pg)
 	roleRepo := repository.NewRoleRepository(pg)
 	studentRepo := repository.NewStudentRepository(pg)
-	lecturerService := service.NewLecturerService(lecturerRepo, studentRepo)
+	lecturerRepo := repository.NewLecturerRepository(pg)
 
 	achievementRepo := repository.NewAchievementRepository(
 		mongoClient,
@@ -51,6 +51,16 @@ func main() {
 	userService := service.NewUserService(
 		userRepo,
 		roleRepo,
+	)
+
+	studentService := service.NewStudentService(
+		studentRepo,
+		achievementRepo, // ✅ FIX DI SINI
+	)
+
+	lecturerService := service.NewLecturerService(
+		lecturerRepo,
+		studentRepo,
 	)
 
 	achievementService := service.NewAchievementService(
