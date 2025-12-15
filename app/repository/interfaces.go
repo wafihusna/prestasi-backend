@@ -9,10 +9,20 @@ import (
 // PostgreSQL Repository
 // =====================
 
+// type UserRepository interface {
+// 	FindByEmail(email string) (*model.User, error)
+// 	FindByID(id string) (*model.User, error)
+// 	Create(user *model.User) error
+// }
+
 type UserRepository interface {
-	FindByEmail(email string) (*model.User, error)
+	FindAll(limit, offset int) ([]model.User, int64, error)
 	FindByID(id string) (*model.User, error)
+	FindByEmail(email string) (*model.User, error)
 	Create(user *model.User) error
+	Update(user *model.User) error
+	Delete(id string) error
+	UpdateRole(userID, roleID string) error
 }
 
 type RoleRepository interface {
@@ -32,6 +42,17 @@ type AchievementReferenceRepository interface {
 	Create(ref *model.AchievementReference) error
 	GetByStudentID(studentID string) ([]model.AchievementReference, error)
 	UpdateStatus(id string, status string) error
+	UpdateVerification(id, status, lecturerID string) error
+	Reject(id, note string) error
+}
+
+type UserService interface {
+	GetUsers(limit, page int) ([]model.User, int64, error)
+	GetUserByID(id string) (*model.User, error)
+	CreateUser(user *model.User) error
+	UpdateUser(id string, user *model.User) error
+	DeleteUser(id string) error
+	AssignRole(userID, roleID string) error
 }
 
 // ===============
