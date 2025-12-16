@@ -121,23 +121,67 @@ func (s *AchievementService) GetAchievementDetail(
 	return s.achievementRepo.FindByID(ctx, ref.MongoAchievementID)
 }
 
-func (s *AchievementService) UpdateAchievementDraft(
+// func (s *AchievementService) UpdateAchievementDraft(
+// 	ctx context.Context,
+// 	refID string,
+// 	update map[string]any,
+// ) error {
+
+// 	ref, err := s.refRepo.GetByID(refID)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	if ref.Status != "draft" {
+// 		return errors.New("only draft achievement can be updated")
+// 	}
+
+// 	update["updatedAt"] = time.Now()
+// 	return s.achievementRepo.UpdateAchievement(ctx, ref.MongoAchievementID, update)
+// }
+
+func (s *AchievementService) UpdateAchievement(
 	ctx context.Context,
+	userID string,
 	refID string,
-	update map[string]any,
+	payload map[string]any,
 ) error {
 
+	// 1️⃣ ambil reference
 	ref, err := s.refRepo.GetByID(refID)
 	if err != nil {
 		return err
 	}
 
+	// 2️⃣ pastikan status masih draft
 	if ref.Status != "draft" {
 		return errors.New("only draft achievement can be updated")
 	}
 
-	update["updatedAt"] = time.Now()
-	return s.achievementRepo.UpdateAchievement(ctx, ref.MongoAchievementID, update)
+	// 3️⃣ pastikan achievement milik mahasiswa tsb
+	student, err := s.studentRepo.GetByUserID(userID)
+	if err != nil {
+		return err
+	}
+
+	studentUUID, err := uuid.Parse(student.ID)
+	if err != nil {
+		return err
+	}
+
+	if ref.StudentID != studentUUID {
+		return errors.New("forbidden: not your achievement")
+	}
+
+	// 4️⃣ set updatedAt
+	payload["updatedAt"] = time.Now()
+
+	// 5️⃣ update ke MongoDB
+	return s.achievementRepo.UpdateAchievement(
+		ctx,
+		ref.MongoAchievementID,
+		payload,
+	)
 }
 
 func (s *AchievementService) DeleteDraft(

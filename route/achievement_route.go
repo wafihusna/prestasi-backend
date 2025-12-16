@@ -157,4 +157,40 @@ func AchievementRoute(
 			return c.JSON(data)
 		},
 	)
+
+	// =========================
+	// UPDATE ACHIEVEMENT (DRAFT)
+	// =========================
+	ach.Put("/:id",
+		middleware.JWTMiddleware(),
+		middleware.RequireRole("mahasiswa"),
+		func(c *fiber.Ctx) error {
+
+			refID := c.Params("id")
+			userID := c.Locals("user_id").(string)
+
+			var payload map[string]any
+			if err := c.BodyParser(&payload); err != nil {
+				return c.Status(400).JSON(fiber.Map{
+					"message": "invalid request body",
+				})
+			}
+
+			if err := svc.UpdateAchievement(
+				context.Background(),
+				userID,
+				refID,
+				payload,
+			); err != nil {
+				return c.Status(400).JSON(fiber.Map{
+					"message": err.Error(),
+				})
+			}
+
+			return c.JSON(fiber.Map{
+				"message": "achievement updated",
+			})
+		},
+	)
+
 }
