@@ -67,3 +67,16 @@ func (r *achievementRepository) DeleteAchievement(
 	_, err := r.col.DeleteOne(ctx, bson.M{"_id": id})
 	return err
 }
+
+func (r *achievementRepository) AddAttachment(
+	ctx context.Context,
+	id string,
+	attachment model.AchievementAttachment,
+) error {
+	_, err := r.col.UpdateOne(
+		ctx,
+		bson.M{"_id": id},
+		bson.M{"$push": bson.M{"attachments": attachment}},
+	)
+	return err
+}

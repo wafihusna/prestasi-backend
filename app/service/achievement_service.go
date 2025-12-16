@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"time"
+	"errors"
 
 	"github.com/google/uuid"
 
@@ -108,29 +109,13 @@ func (s *AchievementService) GetAchievementsByStudent(ctx context.Context, stude
 	return s.achievementRepo.FindByStudent(ctx, studentID)
 }
 
-func (s *AchievementService) UpdateAchievement(ctx context.Context, id string, update map[string]any) error {
-	update["updatedAt"] = time.Now()
-	return s.achievementRepo.UpdateAchievement(ctx, id, update)
-}
+// func (s *AchievementService) UpdateAchievement(ctx context.Context, id string, update map[string]any) error {
+// 	update["updatedAt"] = time.Now()
+// 	return s.achievementRepo.UpdateAchievement(ctx, id, update)
+// }
 
 func (s *AchievementService) DeleteAchievement(ctx context.Context, id string) error {
 	return s.achievementRepo.DeleteAchievement(ctx, id)
-}
-
-func (s *AchievementService) SubmitAchievement(refID string) error {
-	return s.refRepo.UpdateStatus(refID, "submitted")
-}
-
-func (s *AchievementService) VerifyAchievement(refID, lecturerID string) error {
-	return s.refRepo.UpdateVerification(
-		refID,
-		"verified",
-		lecturerID,
-	)
-}
-
-func (s *AchievementService) RejectAchievement(refID, note string) error {
-	return s.refRepo.Reject(refID, note)
 }
 
 func (s *AchievementService) DeleteDraftAchievement(
@@ -146,4 +131,109 @@ func (s *AchievementService) DeleteDraftAchievement(
 
 	// update status di PostgreSQL
 	return s.refRepo.UpdateStatus(refID, "deleted")
+}
+
+func (s *AchievementService) ListAchievementsByStudent(
+	ctx context.Context,
+	userID string,
+) ([]model.Achievement, error) {
+
+	student, err := s.studentRepo.GetByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.achievementRepo.FindByStudent(ctx, student.ID)
+}
+
+func (s *AchievementService) GetAchievementDetail(
+	ctx context.Context,
+	refID string,
+) (*model.Achievement, error) {
+
+	ref, err := s.refRepo.GetByID(refID)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.achievementRepo.FindByID(ctx, ref.MongoAchievementID)
+}
+
+func (s *AchievementService) UpdateAchievementDraft(
+	ctx context.Context,
+	refID string,
+	update map[string]any,
+) error {
+
+	ref, err := s.refRepo.GetByID(refID)
+	if err != nil {
+		return err
+	}
+
+	if ref.Status != "draft" {
+		return errors.New("only draft achievement can be updated")
+	}
+
+	update["updatedAt"] = time.Now()
+	return s.achievementRepo.UpdateAchievement(ctx, ref.MongoAchievementID, update)
+}
+
+func (s *AchievementService) DeleteDraft(
+	ctx context.Context,
+	refID string,
+) error {
+
+	ref, err := s.refRepo.GetByID(refID)
+	if err != nil {
+		return err
+	}
+
+	if ref.Status != "draft" {
+		return errors.New("only draft achievement can be deleted")
+	}
+
+	if err := s.achievementRepo.DeleteAchievement(ctx, ref.MongoAchievementID); err != nil {
+		return err
+	}
+
+	return s.refRepo.UpdateStatus(refID, "deleted")
+}
+
+func (s *AchievementService) SubmitAchievement(refID string) error {
+	return s.refRepo.UpdateStatus(refID, "submitted")
+}
+
+func (s *AchievementService) VerifyAchievement(
+	refID string,
+	lecturerID string,
+) error {
+	return s.refRepo.UpdateVerification(refID, lecturerID)
+}
+
+func (s *AchievementService) RejectAchievement(
+	refID string,
+	note string,
+) error {
+	return s.refRepo.Reject(refID, note)
+}
+
+func (s *AchievementService) GetAchievementHistory(
+	refID string,
+) ([]model.AchievementReference, error) {
+	return s.refRepo.GetHistory(refID)
+}
+
+func (s *AchievementService) AddAttachment(
+	ctx context.Context,
+	refID string,
+	attachment model.AchievementAttachment,
+) error {
+
+	ref, err := s.refRepo.GetByID(refID)
+	if err != nil {
+		return err
+	}
+
+	attachment.UploadedAt = time.Now()
+	return s.achievementRepo.AddAttachment(ctx, ref.MongoAchievementID, attachment)
 }

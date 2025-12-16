@@ -47,9 +47,11 @@ type LecturerRepository interface {
 type AchievementReferenceRepository interface {
 	Create(ref *model.AchievementReference) error
 	GetByStudentID(studentID string) ([]model.AchievementReference, error)
+	GetByID(id string) (*model.AchievementReference, error)
 	UpdateStatus(id string, status string) error
-	UpdateVerification(id, status, lecturerID string) error
-	Reject(id, note string) error
+	UpdateVerification(id string, lecturerID string) error
+	Reject(id string, note string) error
+	GetHistory(id string) ([]model.AchievementReference, error)
 }
 
 type UserService interface {
@@ -67,4 +69,5 @@ type AchievementRepository interface {
 	FindByStudent(ctx context.Context, studentID string) ([]model.Achievement, error)
 	UpdateAchievement(ctx context.Context, id string, update map[string]any) error
 	DeleteAchievement(ctx context.Context, id string) error
+	AddAttachment(ctx context.Context, id string, attachment model.AchievementAttachment) error
 }
