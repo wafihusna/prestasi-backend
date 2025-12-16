@@ -3,6 +3,8 @@ package repository
 import (
 	"projectbase/app/model"
 	"time"
+	"github.com/google/uuid"
+
 
 	"gorm.io/gorm"
 )
@@ -18,17 +20,6 @@ func NewAchievementReferenceRepository(db *gorm.DB) AchievementReferenceReposito
 func (r *achievementRefRepo) Create(ref *model.AchievementReference) error {
 	return r.db.Create(ref).Error
 }
-
-// func (r *achievementRefRepo) GetByUserID(userID string) ([]model.AchievementReference, error) {
-// 	var refs []model.AchievementReference
-
-// 	err := r.db.
-// 		Joins("JOIN students ON students.id = achievement_references.student_id").
-// 		Where("students.user_id = ?", userID).
-// 		Find(&refs).Error
-
-// 	return refs, err
-// }
 
 func (r *achievementRefRepo) GetByStudentID(studentID string) ([]model.AchievementReference, error) {
 	var refs []model.AchievementReference
@@ -70,11 +61,23 @@ func (r *achievementRefRepo) GetByID(id string) (*model.AchievementReference, er
 	return &ref, err
 }
 
-func (r *achievementRefRepo) GetByStudentIDs(studentIDs []string) ([]model.AchievementReference, error) {
+// func (r *achievementRefRepo) GetByStudentIDs(studentIDs []string) ([]model.AchievementReference, error) {
+// 	var refs []model.AchievementReference
+// 	err := r.db.
+// 		Where("student_id IN ?", studentIDs).
+// 		Find(&refs).Error
+// 	return refs, err
+// }
+
+func (r *achievementRefRepo) GetByStudentIDs(
+	studentIDs []uuid.UUID,
+) ([]model.AchievementReference, error) {
+
 	var refs []model.AchievementReference
 	err := r.db.
 		Where("student_id IN ?", studentIDs).
 		Find(&refs).Error
+
 	return refs, err
 }
 

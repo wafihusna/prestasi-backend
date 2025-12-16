@@ -205,7 +205,7 @@ func (s *AchievementService) ListAchievementsByAdvisor(
 	userID string,
 ) ([]model.Achievement, error) {
 
-	// 1️⃣ ambil lecturer dari USER ID
+	// 1️⃣ ambil lecturer
 	lecturer, err := s.lecturerRepo.GetByUserID(userID)
 	if err != nil {
 		return nil, err
@@ -221,14 +221,18 @@ func (s *AchievementService) ListAchievementsByAdvisor(
 		return []model.Achievement{}, nil
 	}
 
-	// 3️⃣ kumpulkan student IDs
-	var studentIDs []string
-	for _, s := range students {
-		studentIDs = append(studentIDs, s.ID)
+	// 3️⃣ kumpulkan student UUIDs
+	var studentUUIDs []uuid.UUID
+	for _, st := range students {
+		id, err := uuid.Parse(st.ID)
+		if err != nil {
+			continue
+		}
+		studentUUIDs = append(studentUUIDs, id)
 	}
 
-	// 4️⃣ ambil references
-	refs, err := s.refRepo.GetByStudentIDs(studentIDs)
+	// 4️⃣ ambil references dari Postgre
+	refs, err := s.refRepo.GetByStudentIDs(studentUUIDs)
 	if err != nil {
 		return nil, err
 	}

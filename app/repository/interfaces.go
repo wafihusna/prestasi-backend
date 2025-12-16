@@ -3,6 +3,8 @@ package repository
 import (
 	"context"
 	"projectbase/app/model"
+
+	"github.com/google/uuid"
 )
 
 // =====================
@@ -48,12 +50,12 @@ type LecturerRepository interface {
 type AchievementReferenceRepository interface {
 	Create(ref *model.AchievementReference) error
 	GetByStudentID(studentID string) ([]model.AchievementReference, error)
-	GetByID(id string) (*model.AchievementReference, error)
+	GetByStudentIDs(studentIDs []uuid.UUID) ([]model.AchievementReference, error)
 	UpdateStatus(id string, status string) error
 	UpdateVerification(id string, lecturerID string) error
 	Reject(id string, note string) error
+	GetByID(id string) (*model.AchievementReference, error)
 	GetHistory(id string) ([]model.AchievementReference, error)
-	GetByStudentIDs(studentIDs []string) ([]model.AchievementReference, error)
 	GetAll() ([]model.AchievementReference, error)
 }
 
