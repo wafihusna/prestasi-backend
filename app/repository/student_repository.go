@@ -42,3 +42,11 @@ func (r *studentRepository) GetByUserID(userID string) (*model.Student, error) {
 	err := r.db.First(&s, "user_id = ?", userID).Error
 	return &s, err
 }
+
+func (r *studentRepository) GetByAdvisorID(advisorID string) ([]model.Student, error) {
+	var students []model.Student
+	err := r.db.
+		Where("advisor_id = ?", advisorID).
+		Find(&students).Error
+	return students, err
+}

@@ -30,39 +30,6 @@ func NewAchievementService(
 }
 
 // CreateAchievement = insert ke Mongo + insert ref ke PostgreSQL
-// func (s *AchievementService) CreateAchievement(
-// 	ctx context.Context,
-// 	userID string,
-// 	ach *model.Achievement,
-// ) error {
-
-// 	// 🔑 ambil student dari user_id
-// 	student, err := s.studentRepo.GetByUserID(userID)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	ach.StudentID = student.ID
-// 	ach.CreatedAt = time.Now()
-// 	ach.UpdatedAt = time.Now()
-
-// 	// MongoDB
-// 	if err := s.achievementRepo.CreateAchievement(ctx, ach); err != nil {
-// 		return err
-// 	}
-
-// 	// PostgreSQL reference
-// 	ref := &model.AchievementReference{
-// 		StudentID:          student.ID,
-// 		MongoAchievementID: ach.ID,
-// 		Status:             "draft",
-// 		CreatedAt:          time.Now(),
-// 	}
-
-// 	return s.refRepo.Create(ref)
-// }
-
-// CreateAchievement = insert ke Mongo + insert ref ke PostgreSQL
 func (s *AchievementService) CreateAchievement(
 	ctx context.Context,
 	userID string,
@@ -108,11 +75,6 @@ func (s *AchievementService) CreateAchievement(
 func (s *AchievementService) GetAchievementsByStudent(ctx context.Context, studentID string) ([]model.Achievement, error) {
 	return s.achievementRepo.FindByStudent(ctx, studentID)
 }
-
-// func (s *AchievementService) UpdateAchievement(ctx context.Context, id string, update map[string]any) error {
-// 	update["updatedAt"] = time.Now()
-// 	return s.achievementRepo.UpdateAchievement(ctx, id, update)
-// }
 
 func (s *AchievementService) DeleteAchievement(ctx context.Context, id string) error {
 	return s.achievementRepo.DeleteAchievement(ctx, id)
@@ -236,4 +198,43 @@ func (s *AchievementService) AddAttachment(
 
 	attachment.UploadedAt = time.Now()
 	return s.achievementRepo.AddAttachment(ctx, ref.MongoAchievementID, attachment)
+}
+
+func (s *AchievementService) ListAchievementsByAdvisor(
+	ctx context.Context,
+	lecturerID string,
+) ([]model.Achievement, error) {
+
+	// 1️⃣ ambil mahasiswa bimbingan
+	students, err := s.studentRepo.GetByAdvisorID(lecturerID)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(students) == 0 {
+		return []model.Achievement{}, nil
+	}
+
+	// 2️⃣ kumpulkan student IDs
+	var studentIDs []string
+	for _, s := range students {
+		studentIDs = append(studentIDs, s.ID)
+	}
+
+	// 3️⃣ ambil reference
+	refs, err := s.refRepo.GetByStudentIDs(studentIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	// 4️⃣ ambil detail dari Mongo
+	var result []model.Achievement
+	for _, ref := range refs {
+		ach, err := s.achievementRepo.FindByID(ctx, ref.MongoAchievementID)
+		if err == nil {
+			result = append(result, *ach)
+		}
+	}
+
+	return result, nil
 }

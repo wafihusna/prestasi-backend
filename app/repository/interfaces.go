@@ -36,6 +36,7 @@ type StudentRepository interface {
 	GetByUserID(userID string) (*model.Student, error)
 	UpdateAdvisor(studentID, advisorID string) error
 	FindByAdvisorID(advisorID string) ([]model.Student, error)
+	GetByAdvisorID(advisorID string) ([]model.Student, error)
 }
 
 type LecturerRepository interface {
@@ -52,6 +53,7 @@ type AchievementReferenceRepository interface {
 	UpdateVerification(id string, lecturerID string) error
 	Reject(id string, note string) error
 	GetHistory(id string) ([]model.AchievementReference, error)
+	GetByStudentIDs(studentIDs []string) ([]model.AchievementReference, error)
 }
 
 type UserService interface {
