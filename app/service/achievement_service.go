@@ -76,24 +76,58 @@ func (s *AchievementService) GetAchievementsByStudent(ctx context.Context, stude
 	return s.achievementRepo.FindByStudent(ctx, studentID)
 }
 
-func (s *AchievementService) DeleteAchievement(ctx context.Context, id string) error {
-	return s.achievementRepo.DeleteAchievement(ctx, id)
-}
+// func (s *AchievementService) DeleteAchievement(ctx context.Context, id string) error {
+// 	return s.achievementRepo.DeleteAchievement(ctx, id)
+// }
 
-func (s *AchievementService) DeleteDraftAchievement(
+func (s *AchievementService) DeleteAchievement(
 	ctx context.Context,
+	userID string,
 	refID string,
-	mongoID string,
 ) error {
 
-	// hapus di Mongo
-	if err := s.achievementRepo.DeleteAchievement(ctx, mongoID); err != nil {
+	// 1️⃣ Ambil reference PostgreSQL
+	ref, err := s.refRepo.GetByID(refID)
+	if err != nil {
 		return err
 	}
 
-	// update status di PostgreSQL
-	return s.refRepo.UpdateStatus(refID, "deleted")
+	// 2️⃣ Validasi status
+	if ref.Status != "draft" {
+		return errors.New("only draft achievement can be deleted")
+	}
+
+	// 3️⃣ Soft delete MongoDB (PAKAI MONGO ID!)
+	err = s.achievementRepo.UpdateAchievement(
+		ctx,
+		ref.MongoAchievementID, // ✅ INI YANG BENAR
+		map[string]any{
+			"deleted":   true,
+			"deletedAt": time.Now(),
+		},
+	)
+	if err != nil {
+		return err
+	}
+
+	// 4️⃣ Update PostgreSQL
+	return s.refRepo.MarkDeleted(refID)
 }
+
+// func (s *AchievementService) DeleteDraftAchievement(
+// 	ctx context.Context,
+// 	refID string,
+// 	mongoID string,
+// ) error {
+
+// 	// hapus di Mongo
+// 	if err := s.achievementRepo.DeleteAchievement(ctx, mongoID); err != nil {
+// 		return err
+// 	}
+
+// 	// update status di PostgreSQL
+// 	return s.refRepo.UpdateStatus(refID, "deleted")
+// }
 
 func (s *AchievementService) ListAchievementsByStudent(
 	ctx context.Context,
@@ -184,26 +218,26 @@ func (s *AchievementService) UpdateAchievement(
 	)
 }
 
-func (s *AchievementService) DeleteDraft(
-	ctx context.Context,
-	refID string,
-) error {
+// func (s *AchievementService) DeleteDraft(
+// 	ctx context.Context,
+// 	refID string,
+// ) error {
 
-	ref, err := s.refRepo.GetByID(refID)
-	if err != nil {
-		return err
-	}
+// 	ref, err := s.refRepo.GetByID(refID)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	if ref.Status != "draft" {
-		return errors.New("only draft achievement can be deleted")
-	}
+// 	if ref.Status != "draft" {
+// 		return errors.New("only draft achievement can be deleted")
+// 	}
 
-	if err := s.achievementRepo.DeleteAchievement(ctx, ref.MongoAchievementID); err != nil {
-		return err
-	}
+// 	if err := s.achievementRepo.DeleteAchievement(ctx, ref.MongoAchievementID); err != nil {
+// 		return err
+// 	}
 
-	return s.refRepo.UpdateStatus(refID, "deleted")
-}
+// 	return s.refRepo.UpdateStatus(refID, "deleted")
+// }
 
 func (s *AchievementService) SubmitAchievement(refID string) error {
 	return s.refRepo.UpdateStatus(refID, "submitted")

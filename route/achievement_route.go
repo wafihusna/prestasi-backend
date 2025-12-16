@@ -73,29 +73,29 @@ func AchievementRoute(
 	// =========================
 	// FR-005 DELETE DRAFT
 	// =========================
-	ach.Delete("/:id",
-		middleware.JWTMiddleware(),
-		middleware.RequireRole("mahasiswa"),
-		func(c *fiber.Ctx) error {
+	// ach.Delete("/:id",
+	// 	middleware.JWTMiddleware(),
+	// 	middleware.RequireRole("mahasiswa"),
+	// 	func(c *fiber.Ctx) error {
 
-			refID := c.Params("id")
-			mongoID := c.Query("mongo_id")
+	// 		refID := c.Params("id")
+	// 		mongoID := c.Query("mongo_id")
 
-			if err := svc.DeleteDraftAchievement(
-				context.Background(),
-				refID,
-				mongoID,
-			); err != nil {
-				return c.Status(500).JSON(fiber.Map{
-					"message": err.Error(),
-				})
-			}
+	// 		if err := svc.DeleteDraftAchievement(
+	// 			context.Background(),
+	// 			refID,
+	// 			mongoID,
+	// 		); err != nil {
+	// 			return c.Status(500).JSON(fiber.Map{
+	// 				"message": err.Error(),
+	// 			})
+	// 		}
 
-			return c.JSON(fiber.Map{
-				"message": "achievement deleted",
-			})
-		},
-	)
+	// 		return c.JSON(fiber.Map{
+	// 			"message": "achievement deleted",
+	// 		})
+	// 	},
+	// )
 
 	ach.Get("/",
 		middleware.JWTMiddleware(),
@@ -193,4 +193,30 @@ func AchievementRoute(
 		},
 	)
 
+	// =========================
+	// DELETE ACHIEVEMENT (DRAFT)
+	// =========================
+	ach.Delete("/:id",
+		middleware.JWTMiddleware(),
+		middleware.RequireRole("mahasiswa"),
+		func(c *fiber.Ctx) error {
+
+			refID := c.Params("id")
+			userID := c.Locals("user_id").(string)
+
+			if err := svc.DeleteAchievement(
+				context.Background(),
+				userID,
+				refID,
+			); err != nil {
+				return c.Status(400).JSON(fiber.Map{
+					"message": err.Error(),
+				})
+			}
+
+			return c.JSON(fiber.Map{
+				"message": "achievement deleted successfully",
+			})
+		},
+	)
 }

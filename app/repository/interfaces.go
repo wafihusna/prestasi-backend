@@ -57,6 +57,7 @@ type AchievementReferenceRepository interface {
 	GetByID(id string) (*model.AchievementReference, error)
 	GetHistory(id string) ([]model.AchievementReference, error)
 	GetAll() ([]model.AchievementReference, error)
+	MarkDeleted(refID string) error
 }
 
 type UserService interface {

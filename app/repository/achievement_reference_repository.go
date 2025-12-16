@@ -95,3 +95,12 @@ func (r *achievementRefRepo) GetAll() ([]model.AchievementReference, error) {
 	err := r.db.Find(&refs).Error
 	return refs, err
 }
+
+func (r *achievementRefRepo) MarkDeleted(refID string) error {
+	return r.db.Model(&model.AchievementReference{}).
+		Where("id = ?", refID).
+		Updates(map[string]any{
+			"status":     "deleted",
+			"updated_at": time.Now(),
+		}).Error
+}
