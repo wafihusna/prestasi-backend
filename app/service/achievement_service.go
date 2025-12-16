@@ -32,44 +32,41 @@ func NewAchievementService(
 	}
 }
 
-// CreateAchievement = insert ke Mongo + insert ref ke PostgreSQL
 func (s *AchievementService) CreateAchievement(
 	ctx context.Context,
 	userID string,
 	ach *model.Achievement,
 ) error {
 
-	// 🔑 ambil student dari user_id
 	student, err := s.studentRepo.GetByUserID(userID)
 	if err != nil {
 		return err
 	}
 
-	// 🔁 convert student.ID (string) → uuid.UUID
 	studentUUID, err := uuid.Parse(student.ID)
 	if err != nil {
 		return err
 	}
 
-	// set data achievement (Mongo)
 	ach.StudentID = student.ID
 	ach.CreatedAt = time.Now()
 	ach.UpdatedAt = time.Now()
 
-	// MongoDB insert
+	// 🔥 INSERT KE MONGO
 	if err := s.achievementRepo.CreateAchievement(ctx, ach); err != nil {
 		return err
 	}
 
-	// simpan Mongo ID sebagai string
+	// 🔥 AMBIL ID MONGO
 	mongoID := ach.ID
 
-	// PostgreSQL reference
+	// 🔥 SIMPAN KE POSTGRES
 	ref := &model.AchievementReference{
-		StudentID:          studentUUID, // ✅ UUID
-		MongoAchievementID: mongoID,     // ✅ string pointer
+		StudentID:          studentUUID,
+		MongoAchievementID: mongoID,
 		Status:             "draft",
 		CreatedAt:          time.Now(),
+		UpdatedAt:          time.Now(),
 	}
 
 	return s.refRepo.Create(ref)
