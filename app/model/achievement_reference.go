@@ -8,7 +8,8 @@ import (
 type AchievementReference struct {
 	ID                  uuid.UUID   `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
 	StudentID           uuid.UUID   `gorm:"type:uuid;not null"`
-	MongoAchievementID  string `gorm:"type:uuid"`
+	MongoAchievementID string `gorm:"type:text;not null"`
+	RefID   string              `json:"ref_id"`
 	Status              string
 	SubmittedAt         *time.Time
 	VerifiedAt          *time.Time

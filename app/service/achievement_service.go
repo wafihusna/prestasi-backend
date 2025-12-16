@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
-	"time"
 	"errors"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -15,17 +15,20 @@ type AchievementService struct {
 	achievementRepo repository.AchievementRepository
 	refRepo         repository.AchievementReferenceRepository
 	studentRepo     repository.StudentRepository
+	lecturerRepo    repository.LecturerRepository
 }
 
 func NewAchievementService(
 	achievementRepo repository.AchievementRepository,
 	refRepo repository.AchievementReferenceRepository,
 	studentRepo repository.StudentRepository,
+	lecturerRepo repository.LecturerRepository,
 ) *AchievementService {
 	return &AchievementService{
 		achievementRepo: achievementRepo,
 		refRepo:         refRepo,
 		studentRepo:     studentRepo,
+		lecturerRepo:    lecturerRepo,
 	}
 }
 
@@ -202,11 +205,17 @@ func (s *AchievementService) AddAttachment(
 
 func (s *AchievementService) ListAchievementsByAdvisor(
 	ctx context.Context,
-	lecturerID string,
+	userID string,
 ) ([]model.Achievement, error) {
 
-	// 1️⃣ ambil mahasiswa bimbingan
-	students, err := s.studentRepo.GetByAdvisorID(lecturerID)
+	// 1️⃣ ambil lecturer dari USER ID
+	lecturer, err := s.lecturerRepo.GetByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// 2️⃣ ambil mahasiswa bimbingan
+	students, err := s.studentRepo.GetByAdvisorID(lecturer.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -215,19 +224,19 @@ func (s *AchievementService) ListAchievementsByAdvisor(
 		return []model.Achievement{}, nil
 	}
 
-	// 2️⃣ kumpulkan student IDs
+	// 3️⃣ kumpulkan student IDs
 	var studentIDs []string
 	for _, s := range students {
 		studentIDs = append(studentIDs, s.ID)
 	}
 
-	// 3️⃣ ambil reference
+	// 4️⃣ ambil references
 	refs, err := s.refRepo.GetByStudentIDs(studentIDs)
 	if err != nil {
 		return nil, err
 	}
 
-	// 4️⃣ ambil detail dari Mongo
+	// 5️⃣ ambil detail Mongo
 	var result []model.Achievement
 	for _, ref := range refs {
 		ach, err := s.achievementRepo.FindByID(ctx, ref.MongoAchievementID)
@@ -241,19 +250,26 @@ func (s *AchievementService) ListAchievementsByAdvisor(
 
 func (s *AchievementService) ListAllAchievements(
 	ctx context.Context,
-) ([]model.Achievement, error) {
+) ([]model.AchievementResponse, error) {
 
 	refs, err := s.refRepo.GetAll()
 	if err != nil {
 		return nil, err
 	}
 
-	var result []model.Achievement
+	var result []model.AchievementResponse
+
 	for _, ref := range refs {
 		ach, err := s.achievementRepo.FindByID(ctx, ref.MongoAchievementID)
-		if err == nil {
-			result = append(result, *ach)
+		if err != nil {
+			continue
 		}
+
+		result = append(result, model.AchievementResponse{
+			RefID:   ref.ID.String(),
+			MongoID: ref.MongoAchievementID,
+			Data:    *ach,
+		})
 	}
 
 	return result, nil

@@ -114,7 +114,7 @@ func AchievementRoute(
 				}
 				return c.JSON(data)
 
-			case "dosen wali", "dosen":
+			case "dosen wali":
 				data, err := svc.ListAchievementsByAdvisor(ctx, userID)
 				if err != nil {
 					return c.Status(500).JSON(fiber.Map{"message": err.Error()})
@@ -133,6 +133,28 @@ func AchievementRoute(
 					"message": "forbidden",
 				})
 			}
+		},
+	)
+
+	// =========================
+	// GET DETAIL ACHIEVEMENT
+	// =========================
+	ach.Get("/:id",
+		middleware.JWTMiddleware(),
+		func(c *fiber.Ctx) error {
+			refID := c.Params("id")
+
+			data, err := svc.GetAchievementDetail(
+				context.Background(),
+				refID, // UUID
+			)
+			if err != nil {
+				return c.Status(404).JSON(fiber.Map{
+					"message": err.Error(),
+				})
+			}
+
+			return c.JSON(data)
 		},
 	)
 }
