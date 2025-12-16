@@ -3,6 +3,7 @@ package route
 import (
 	"context"
 	"strings"
+	"time"
 
 	"projectbase/app/model"
 	"projectbase/app/service"
@@ -251,6 +252,74 @@ func AchievementRoute(
 
 			return c.JSON(fiber.Map{
 				"status": "rejected",
+			})
+		},
+	)
+
+	// =========================
+	// GET ACHIEVEMENT HISTORY
+	// =========================
+	ach.Get("/:id/history",
+		middleware.JWTMiddleware(),
+		func(c *fiber.Ctx) error {
+
+			refID := c.Params("id")
+
+			data, err := svc.GetAchievementHistory(refID)
+			if err != nil {
+				return c.Status(500).JSON(fiber.Map{
+					"message": err.Error(),
+				})
+			}
+
+			return c.JSON(data)
+		},
+	)
+
+	// =========================
+	// UPLOAD ATTACHMENT
+	// =========================
+	ach.Post("/:id/attachments",
+		middleware.JWTMiddleware(),
+		middleware.RequireRole("mahasiswa"),
+		func(c *fiber.Ctx) error {
+
+			refID := c.Params("id")
+
+			file, err := c.FormFile("file")
+			if err != nil {
+				return c.Status(400).JSON(fiber.Map{
+					"message": "file is required",
+				})
+			}
+
+			// 📁 Simpan file (local storage)
+			savePath := "./uploads/" + file.Filename
+			if err := c.SaveFile(file, savePath); err != nil {
+				return c.Status(500).JSON(fiber.Map{
+					"message": "failed to save file",
+				})
+			}
+
+			attachment := model.AchievementAttachment{
+				FileName:   file.Filename,
+				FileURL:    savePath,
+				FileType:   file.Header.Get("Content-Type"),
+				UploadedAt: time.Now(),
+			}
+
+			if err := svc.AddAttachment(
+				context.Background(),
+				refID,
+				attachment,
+			); err != nil {
+				return c.Status(500).JSON(fiber.Map{
+					"message": err.Error(),
+				})
+			}
+
+			return c.JSON(fiber.Map{
+				"message": "attachment uploaded successfully",
 			})
 		},
 	)

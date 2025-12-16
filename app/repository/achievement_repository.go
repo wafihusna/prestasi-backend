@@ -16,12 +16,12 @@ type achievementRepository struct {
 }
 
 type achievementMongo struct {
-	ID primitive.ObjectID `bson:"_id"`
-	StudentID string `bson:"studentId"`
-	Title string `bson:"title"`
-	Details any `bson:"details"`
-	CreatedAt time.Time `bson:"createdAt"`
-	UpdatedAt time.Time `bson:"updatedAt"`
+	ID        primitive.ObjectID `bson:"_id"`
+	StudentID string             `bson:"studentId"`
+	Title     string             `bson:"title"`
+	Details   any                `bson:"details"`
+	CreatedAt time.Time          `bson:"createdAt"`
+	UpdatedAt time.Time          `bson:"updatedAt"`
 }
 
 func NewAchievementRepository(db *mongo.Client, dbName string) AchievementRepository {
@@ -113,22 +113,26 @@ func (r *achievementRepository) DeleteAchievement(
 	return err
 }
 
-// ✅ ADD ATTACHMENT
 func (r *achievementRepository) AddAttachment(
 	ctx context.Context,
-	id string,
+	mongoID string,
 	attachment model.AchievementAttachment,
 ) error {
 
-	objID, err := primitive.ObjectIDFromHex(id)
+	oid, err := primitive.ObjectIDFromHex(mongoID)
 	if err != nil {
 		return err
 	}
 
 	_, err = r.col.UpdateOne(
 		ctx,
-		bson.M{"_id": objID},
-		bson.M{"$push": bson.M{"attachments": attachment}},
+		bson.M{"_id": oid},
+		bson.M{
+			"$push": bson.M{
+				"attachments": attachment,
+			},
+		},
 	)
+
 	return err
 }
