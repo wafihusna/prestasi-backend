@@ -3,8 +3,8 @@ package repository
 import (
 	"projectbase/app/model"
 	"time"
-	"github.com/google/uuid"
 
+	"github.com/google/uuid"
 
 	"gorm.io/gorm"
 )
@@ -46,12 +46,13 @@ func (r *achievementRefRepo) UpdateVerification(
 		}).Error
 }
 
-func (r *achievementRefRepo) Reject(id string, note string) error {
+func (r *achievementRefRepo) Reject(refID string, note string) error {
 	return r.db.Model(&model.AchievementReference{}).
-		Where("id = ?", id).
+		Where("id = ?", refID).
 		Updates(map[string]any{
 			"status":         "rejected",
 			"rejection_note": note,
+			"updated_at":     time.Now(),
 		}).Error
 }
 

@@ -27,8 +27,16 @@ func (r *lecturerRepository) FindByID(id string) (*model.Lecturer, error) {
 }
 
 
+// func (r *lecturerRepository) GetByUserID(userID string) (*model.Lecturer, error) {
+// 	var l model.Lecturer
+// 	err := r.db.First(&l, "user_id = ?", userID).Error
+// 	return &l, err
+// }
+
 func (r *lecturerRepository) GetByUserID(userID string) (*model.Lecturer, error) {
 	var l model.Lecturer
-	err := r.db.First(&l, "user_id = ?", userID).Error
+	err := r.db.
+		Where("user_id = ?", userID).
+		First(&l).Error
 	return &l, err
 }

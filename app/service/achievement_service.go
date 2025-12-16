@@ -76,10 +76,6 @@ func (s *AchievementService) GetAchievementsByStudent(ctx context.Context, stude
 	return s.achievementRepo.FindByStudent(ctx, studentID)
 }
 
-// func (s *AchievementService) DeleteAchievement(ctx context.Context, id string) error {
-// 	return s.achievementRepo.DeleteAchievement(ctx, id)
-// }
-
 func (s *AchievementService) DeleteAchievement(
 	ctx context.Context,
 	userID string,
@@ -114,21 +110,6 @@ func (s *AchievementService) DeleteAchievement(
 	return s.refRepo.MarkDeleted(refID)
 }
 
-// func (s *AchievementService) DeleteDraftAchievement(
-// 	ctx context.Context,
-// 	refID string,
-// 	mongoID string,
-// ) error {
-
-// 	// hapus di Mongo
-// 	if err := s.achievementRepo.DeleteAchievement(ctx, mongoID); err != nil {
-// 		return err
-// 	}
-
-// 	// update status di PostgreSQL
-// 	return s.refRepo.UpdateStatus(refID, "deleted")
-// }
-
 func (s *AchievementService) ListAchievementsByStudent(
 	ctx context.Context,
 	userID string,
@@ -154,25 +135,6 @@ func (s *AchievementService) GetAchievementDetail(
 
 	return s.achievementRepo.FindByID(ctx, ref.MongoAchievementID)
 }
-
-// func (s *AchievementService) UpdateAchievementDraft(
-// 	ctx context.Context,
-// 	refID string,
-// 	update map[string]any,
-// ) error {
-
-// 	ref, err := s.refRepo.GetByID(refID)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	if ref.Status != "draft" {
-// 		return errors.New("only draft achievement can be updated")
-// 	}
-
-// 	update["updatedAt"] = time.Now()
-// 	return s.achievementRepo.UpdateAchievement(ctx, ref.MongoAchievementID, update)
-// }
 
 func (s *AchievementService) UpdateAchievement(
 	ctx context.Context,
@@ -218,44 +180,82 @@ func (s *AchievementService) UpdateAchievement(
 	)
 }
 
-// func (s *AchievementService) DeleteDraft(
-// 	ctx context.Context,
-// 	refID string,
-// ) error {
+func (s *AchievementService) SubmitAchievement(
+	userID string,
+	refID string,
+) error {
 
-// 	ref, err := s.refRepo.GetByID(refID)
-// 	if err != nil {
-// 		return err
-// 	}
+	ref, err := s.refRepo.GetByID(refID)
+	if err != nil {
+		return err
+	}
 
-// 	if ref.Status != "draft" {
-// 		return errors.New("only draft achievement can be deleted")
-// 	}
+	// 1️⃣ hanya draft
+	if ref.Status != "draft" {
+		return errors.New("only draft achievement can be submitted")
+	}
 
-// 	if err := s.achievementRepo.DeleteAchievement(ctx, ref.MongoAchievementID); err != nil {
-// 		return err
-// 	}
+	// 2️⃣ pastikan milik mahasiswa tsb
+	student, err := s.studentRepo.GetByUserID(userID)
+	if err != nil {
+		return err
+	}
 
-// 	return s.refRepo.UpdateStatus(refID, "deleted")
-// }
+	studentUUID, _ := uuid.Parse(student.ID)
+	if ref.StudentID != studentUUID {
+		return errors.New("forbidden: not your achievement")
+	}
 
-func (s *AchievementService) SubmitAchievement(refID string) error {
+	// 3️⃣ update status
 	return s.refRepo.UpdateStatus(refID, "submitted")
 }
 
 func (s *AchievementService) VerifyAchievement(
+	userID string,
 	refID string,
-	lecturerID string,
 ) error {
-	return s.refRepo.UpdateVerification(refID, lecturerID)
+
+	lecturer, err := s.lecturerRepo.GetByUserID(userID)
+	if err != nil {
+		return err
+	}
+
+	ref, err := s.refRepo.GetByID(refID)
+	if err != nil {
+		return err
+	}
+
+	if ref.Status != "submitted" {
+		return errors.New("only submitted achievement can be verified")
+	}
+
+	return s.refRepo.UpdateVerification(
+		refID,
+		lecturer.ID, // ✅ REAL lecturers.id
+	)
 }
 
 func (s *AchievementService) RejectAchievement(
-	refID string,
-	note string,
+    refID string,
+    note string,
 ) error {
-	return s.refRepo.Reject(refID, note)
+
+    if note == "" {
+        return errors.New("rejection note is required")
+    }
+
+    ref, err := s.refRepo.GetByID(refID)
+    if err != nil {
+        return err
+    }
+
+    if ref.Status != "submitted" {
+        return errors.New("only submitted achievement can be rejected")
+    }
+
+    return s.refRepo.Reject(refID, note)
 }
+
 
 func (s *AchievementService) GetAchievementHistory(
 	refID string,

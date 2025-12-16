@@ -57,9 +57,10 @@ func AchievementRoute(
 		func(c *fiber.Ctx) error {
 
 			refID := c.Params("id")
+			userID := c.Locals("user_id").(string)
 
-			if err := svc.SubmitAchievement(refID); err != nil {
-				return c.Status(500).JSON(fiber.Map{
+			if err := svc.SubmitAchievement(userID, refID); err != nil {
+				return c.Status(400).JSON(fiber.Map{
 					"message": err.Error(),
 				})
 			}
@@ -69,33 +70,6 @@ func AchievementRoute(
 			})
 		},
 	)
-
-	// =========================
-	// FR-005 DELETE DRAFT
-	// =========================
-	// ach.Delete("/:id",
-	// 	middleware.JWTMiddleware(),
-	// 	middleware.RequireRole("mahasiswa"),
-	// 	func(c *fiber.Ctx) error {
-
-	// 		refID := c.Params("id")
-	// 		mongoID := c.Query("mongo_id")
-
-	// 		if err := svc.DeleteDraftAchievement(
-	// 			context.Background(),
-	// 			refID,
-	// 			mongoID,
-	// 		); err != nil {
-	// 			return c.Status(500).JSON(fiber.Map{
-	// 				"message": err.Error(),
-	// 			})
-	// 		}
-
-	// 		return c.JSON(fiber.Map{
-	// 			"message": "achievement deleted",
-	// 		})
-	// 	},
-	// )
 
 	ach.Get("/",
 		middleware.JWTMiddleware(),
@@ -216,6 +190,67 @@ func AchievementRoute(
 
 			return c.JSON(fiber.Map{
 				"message": "achievement deleted successfully",
+			})
+		},
+	)
+
+	// =========================
+	// FR-007 VERIFY
+	// =========================
+	ach.Post("/:id/verify",
+		middleware.JWTMiddleware(),
+		middleware.RequireRole("dosen wali"),
+		func(c *fiber.Ctx) error {
+
+			refID := c.Params("id")
+			userID := c.Locals("user_id").(string)
+
+			if err := svc.VerifyAchievement(userID, refID); err != nil {
+				return c.Status(400).JSON(fiber.Map{
+					"message": err.Error(),
+				})
+			}
+
+			return c.JSON(fiber.Map{
+				"status": "verified",
+			})
+		},
+	)
+
+	// =========================
+	// FR-008 REJECT
+	// =========================
+	ach.Post("/:id/reject",
+		middleware.JWTMiddleware(),
+		middleware.RequireRole("dosen wali"),
+		func(c *fiber.Ctx) error {
+
+			refID := c.Params("id")
+
+			var body struct {
+				Note string `json:"note"`
+			}
+
+			if err := c.BodyParser(&body); err != nil {
+				return c.Status(400).JSON(fiber.Map{
+					"message": "invalid request body",
+				})
+			}
+
+			if body.Note == "" {
+				return c.Status(400).JSON(fiber.Map{
+					"message": "rejection note is required",
+				})
+			}
+
+			if err := svc.RejectAchievement(refID, body.Note); err != nil {
+				return c.Status(400).JSON(fiber.Map{
+					"message": err.Error(),
+				})
+			}
+
+			return c.JSON(fiber.Map{
+				"status": "rejected",
 			})
 		},
 	)
