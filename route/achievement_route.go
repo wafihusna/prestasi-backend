@@ -103,7 +103,6 @@ func AchievementRoute(
 
 			role := strings.ToLower(c.Locals("role").(string))
 			userID := c.Locals("user_id").(string)
-
 			ctx := context.Background()
 
 			switch role {
@@ -115,8 +114,15 @@ func AchievementRoute(
 				}
 				return c.JSON(data)
 
-			case "dosen", "dosen wali", "dosen_wali":
+			case "dosen wali", "dosen":
 				data, err := svc.ListAchievementsByAdvisor(ctx, userID)
+				if err != nil {
+					return c.Status(500).JSON(fiber.Map{"message": err.Error()})
+				}
+				return c.JSON(data)
+
+			case "admin":
+				data, err := svc.ListAllAchievements(ctx)
 				if err != nil {
 					return c.Status(500).JSON(fiber.Map{"message": err.Error()})
 				}

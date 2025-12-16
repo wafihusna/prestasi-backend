@@ -238,3 +238,23 @@ func (s *AchievementService) ListAchievementsByAdvisor(
 
 	return result, nil
 }
+
+func (s *AchievementService) ListAllAchievements(
+	ctx context.Context,
+) ([]model.Achievement, error) {
+
+	refs, err := s.refRepo.GetAll()
+	if err != nil {
+		return nil, err
+	}
+
+	var result []model.Achievement
+	for _, ref := range refs {
+		ach, err := s.achievementRepo.FindByID(ctx, ref.MongoAchievementID)
+		if err == nil {
+			result = append(result, *ach)
+		}
+	}
+
+	return result, nil
+}

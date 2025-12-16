@@ -54,6 +54,7 @@ type AchievementReferenceRepository interface {
 	Reject(id string, note string) error
 	GetHistory(id string) ([]model.AchievementReference, error)
 	GetByStudentIDs(studentIDs []string) ([]model.AchievementReference, error)
+	GetAll() ([]model.AchievementReference, error)
 }
 
 type UserService interface {

@@ -68,7 +68,9 @@ func AuthRoute(api fiber.Router, authService *service.AuthService) {
 			userID := c.Locals("user_id").(string)
 			role := c.Locals("role").(string)
 
-			token, _ := utils.GenerateJWT(userID, role)
+			permissions := c.Locals("permissions").([]string)
+
+			token, _ := utils.GenerateJWT(userID, role, permissions)
 
 			return c.JSON(fiber.Map{
 				"token": token,

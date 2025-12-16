@@ -87,3 +87,8 @@ func (r *achievementRefRepo) GetHistory(id string) ([]model.AchievementReference
 	return history, err
 }
 
+func (r *achievementRefRepo) GetAll() ([]model.AchievementReference, error) {
+	var refs []model.AchievementReference
+	err := r.db.Find(&refs).Error
+	return refs, err
+}

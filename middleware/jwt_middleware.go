@@ -27,6 +27,7 @@ func JWTMiddleware() fiber.Handler {
 
 		c.Locals("user_id", claims.UserID)
 		c.Locals("role", claims.Role)
+		c.Locals("permissions", claims.Permissions)
 
 		return c.Next()
 	}

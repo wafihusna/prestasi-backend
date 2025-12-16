@@ -4,9 +4,12 @@ import "github.com/gofiber/fiber/v2"
 
 func RequirePermission(permission string) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-
-		role := c.Locals("role").(string)
-		perms := rolePermissions[role]
+		perms, ok := c.Locals("permissions").([]string)
+		if !ok {
+			return c.Status(403).JSON(fiber.Map{
+				"message": "permission denied",
+			})
+		}
 
 		for _, p := range perms {
 			if p == permission {
