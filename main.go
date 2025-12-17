@@ -70,6 +70,12 @@ func main() {
 		lecturerRepo,
 	)
 
+	reportService := service.NewReportService(
+		achievementRepo,
+		studentRepo,
+		refRepo,
+	)
+
 	// =====================
 	// FIBER
 	// =====================
@@ -83,6 +89,7 @@ func main() {
 	route.AchievementRoute(api, achievementService)
 	route.UserRoute(api, userService)
 	route.StudentLecturerRoute(api, studentService, lecturerService)
+	route.ReportRoute(api, reportService)
 
 	log.Println("🚀 Server running on port", cfg.AppPort)
 	log.Fatal(app.Listen(":" + cfg.AppPort))
