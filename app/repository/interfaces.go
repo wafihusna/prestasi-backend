@@ -39,7 +39,6 @@ type StudentRepository interface {
 	UpdateAdvisor(studentID, advisorID string) error
 	FindByAdvisorID(advisorID string) ([]model.Student, error)
 	GetByAdvisorID(advisorID string) ([]model.Student, error)
-	
 }
 
 type LecturerRepository interface {

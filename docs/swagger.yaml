@@ -1,0 +1,303 @@
+openapi: 3.0.3
+info:
+  title: ProjectBase API
+  description: API Documentation for Achievement & Academic System
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local server
+
+tags:
+  - name: Auth
+  - name: Achievements
+  - name: Reports
+  - name: Students
+  - name: Lecturers
+  - name: Users
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Achievement:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          example: draft
+        created_at:
+          type: string
+          format: date-time
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        full_name:
+          type: string
+        role:
+          type: string
+
+security:
+  - BearerAuth: []
+
+paths:
+
+  # =========================
+  # AUTH
+  # =========================
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        200:
+          description: Login success
+
+  /auth/profile:
+    get:
+      tags: [Auth]
+      summary: Get logged in profile
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Profile data
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Refresh JWT token
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: New token
+
+  # =========================
+  # ACHIEVEMENTS
+  # =========================
+  /achievements:
+    post:
+      tags: [Achievements]
+      summary: Create achievement (Draft)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Achievement'
+      responses:
+        200:
+          description: Achievement created
+
+    get:
+      tags: [Achievements]
+      summary: List achievements based on role
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: List achievements
+
+  /achievements/{id}:
+    get:
+      tags: [Achievements]
+      summary: Get achievement detail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Achievement detail
+
+    put:
+      tags: [Achievements]
+      summary: Update draft achievement
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        200:
+          description: Updated
+
+    delete:
+      tags: [Achievements]
+      summary: Delete draft achievement
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Deleted
+
+  /achievements/{id}/submit:
+    post:
+      tags: [Achievements]
+      summary: Submit achievement
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Submitted
+
+  /achievements/{id}/verify:
+    post:
+      tags: [Achievements]
+      summary: Verify achievement (Advisor)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Verified
+
+  /achievements/{id}/reject:
+    post:
+      tags: [Achievements]
+      summary: Reject achievement
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                note:
+                  type: string
+      responses:
+        200:
+          description: Rejected
+
+  /achievements/{id}/history:
+    get:
+      tags: [Achievements]
+      summary: Get achievement history
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: History list
+
+  # =========================
+  # REPORTS
+  # =========================
+  /reports/statistics:
+    get:
+      tags: [Reports]
+      summary: Get global statistics
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Statistics data
+
+  /reports/student/{id}:
+    get:
+      tags: [Reports]
+      summary: Get student statistics
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Student statistics
+
+  # =========================
+  # USERS (ADMIN)
+  # =========================
+  /users:
+    get:
+      tags: [Users]
+      summary: Get users (Admin)
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: List users
+
+    post:
+      tags: [Users]
+      summary: Create user
+      security:
+        - BearerAuth: []
+      responses:
+        201:
+          description: User created
