@@ -55,7 +55,8 @@ func main() {
 
 	studentService := service.NewStudentService(
 		studentRepo,
-		achievementRepo, // ✅ FIX DI SINI
+		achievementRepo,
+		lecturerRepo,
 	)
 
 	lecturerService := service.NewLecturerService(

@@ -1,6 +1,7 @@
 package route
 
 import (
+	"projectbase/app/model"
 	"projectbase/app/service"
 	"projectbase/middleware"
 
@@ -49,9 +50,32 @@ func StudentLecturerRoute(
 	students.Get("/:id/achievements",
 		middleware.RequireAnyRole("admin", "lecturer"),
 		func(c *fiber.Ctx) error {
-			return c.Status(501).JSON(fiber.Map{
-				"message": "Get student achievements not implemented yet",
-			})
+
+			role := c.Locals("role").(string)
+			userID := c.Locals("user_id").(string)
+			studentID := c.Params("id")
+
+			var (
+				data []model.Achievement
+				err  error
+			)
+
+			if role == "admin" {
+				data, err = studentService.GetStudentAchievements(studentID)
+			} else {
+				data, err = studentService.GetStudentAchievementsForLecturer(
+					studentID,
+					userID,
+				)
+			}
+
+			if err != nil {
+				return c.Status(403).JSON(fiber.Map{
+					"message": "forbidden",
+				})
+			}
+
+			return c.JSON(data)
 		},
 	)
 

@@ -16,6 +16,10 @@ type StudentService interface {
 	GetStudentByID(id string) (*model.Student, error)
 	GetStudentByUserID(userID string) (*model.Student, error)
 	GetStudentAchievements(studentUUID string) ([]model.Achievement, error)
+	GetStudentAchievementsForLecturer(
+		studentUUID string,
+		lecturerUserID string,
+	) ([]model.Achievement, error)
 	AssignAdvisor(studentID, advisorID string) error
 }
 
